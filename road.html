@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>路徑頁面</title>
+    <link rel="stylesheet" href="./css/road.css">
+</head>
+<body>
+    <div id="navbar" class="navbar">
+        <button class="hamburger" onclick="toggleMenu()">☰</button>
+    </div>
+
+    <!-- 未登入顯示的部分 -->
+    <div id="notLoggedIn" class="content">
+        <h1>路線資料</h1>
+        <button onclick="login()">登入 GO Mountain</button>
+    </div>
+
+    <!-- 已登入顯示的部分 -->
+    <div id="loggedIn" class="content hidden">
+        <h1>路線資料</h1>
+        <ul>
+            <li>2024-08-20 距離 | 300KM</li>
+            <li>2024-08-20 距離 | 300KM</li>
+            <li>2024-08-20 距離 | 300KM</li>
+            <!-- 更多項目 -->
+        </ul>
+    </div>
+
+    <script>
+        function login() {
+            document.getElementById('notLoggedIn').classList.add('hidden');
+            document.getElementById('loggedIn').classList.remove('hidden');
+        }
+
+        function toggleMenu() {
+            // 切換選單的功能
+        }
+    </script>
+</body>
+</html>
