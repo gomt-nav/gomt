@@ -1,0 +1,54 @@
+/* 導覽頁面預設隱藏 */
+.nav-panel {
+    display: none;
+    height: 100vh;
+    background-color: #00FF00;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    z-index: 1000;
+    padding-top: 56px; /* 與 navbar 的高度對齊 */
+}
+
+/* 顯示導覽頁 */
+.show-nav {
+    display: block;
+}
+
+/* 保證頁面不會被遮擋 */
+.container {
+    margin-top: 100px;
+}
+
+/* 導覽列樣式 */
+.nav-panel ul {
+    padding-left: 15px;
+}
+
+/* 每個選項的樣式 */
+.nav-panel ul li {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+/* 頁面內容樣式 */
+body {
+    background-color: white;
+}
+
+.login-logo {
+    width: 150px;
+    margin-bottom: 30px;
+}
+
+h1 {
+    font-size: 64px;
+    color: #000;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+button {
+    width: 200px;
+}

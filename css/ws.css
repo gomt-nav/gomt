@@ -1,0 +1,46 @@
+/* 導覽頁面預設隱藏 */
+.nav-panel {
+    display: none;
+    height: 100vh;
+    background-color: #00FF00;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    z-index: 1000;
+    padding-top: 56px; /* 與 navbar 的高度對齊 */
+}
+
+/* 顯示導覽頁 */
+.show-nav {
+    display: block;
+}
+
+/* 導覽列超連結樣式 */
+.nav-panel ul li a {
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* 保證導覽列的文字顏色 */
+.text-dark {
+    color: #000 !important;
+}
+
+/* 水源方框的樣式 */
+#waterSources .border {
+    background-color: #f8f9fa;
+}
+
+/* 頁面主標題 */
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #00d9ff;
+}
+
+/* 保證頁面不會被遮擋 */
+.container {
+    margin-top: 100px;
+}
