@@ -1,54 +1,53 @@
-/* 導覽頁面預設隱藏 */
-.nav-panel {
-    display: none;
-    height: 100vh;
-    background-color: #00FF00;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 250px;
-    z-index: 1000;
-    padding-top: 56px; /* 與 navbar 的高度對齊 */
-}
-
-/* 顯示導覽頁 */
-.show-nav {
-    display: block;
-}
-
-/* 保證頁面不會被遮擋 */
-.container {
-    margin-top: 100px;
-}
-
-/* 導覽列樣式 */
-.nav-panel ul {
-    padding-left: 15px;
-}
-
-/* 每個選項的樣式 */
-.nav-panel ul li {
-    font-size: 18px;
-    margin-bottom: 15px;
-}
-
-/* 頁面內容樣式 */
 body {
-    background-color: white;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.login-logo {
-    width: 150px;
-    margin-bottom: 30px;
-}
-
-h1 {
-    font-size: 64px;
-    color: #000;
+.login-container {
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+    background-color: #FFFFFF; /* 白色背景 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     text-align: center;
-    letter-spacing: 2px;
+}
+
+.logo-container {
+    margin-bottom: 20px;
+}
+
+.logo {
+    width: 100px; /* 根據實際大小調整 */
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+}
+
+input[type="text"],
+input[type="password"] {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
 button {
-    width: 200px;
+    background-color: #00FF00; /* 綠色按鈕 */
+    color: #FFFFFF;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #008000; /* 深綠色 */
 }

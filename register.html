@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>註冊頁面</title>
+    <link rel="stylesheet" href="./css/register.css">
+</head>
+<body>
+    <div class="container">
+        <h2>註冊新帳戶</h2>
+        <form action="/submit_registration" method="POST">
+            <div class="form-group">
+                <label for="name">姓名：</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">電子郵件：</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密碼：</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">註冊</button>
+        </form>
+        <!-- Google 登入按鈕 -->
+        <div class="google-login">
+            <button onclick="handleGoogleLogin()">使用 Google 註冊</button>
+        </div>
+    </div>
+
+    <!-- Google 登入處理的假象腳本 -->
+    <script>
+        function handleGoogleLogin() {
+            console.log('Google 登入被點擊');
+            // 在此處添加真實的 Google 登入邏輯或重定向
+        }
+    </script>
+</body>
+</html>
