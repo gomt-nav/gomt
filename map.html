@@ -7,6 +7,8 @@
     <link rel="manifest" href="/manifest.json">
     <!-- 引入 Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 Leaflet.js 的 CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <!-- 自訂的 CSS 檔案 -->
     <link rel="stylesheet" href="./css/map.css">
 </head>
@@ -25,13 +27,13 @@
     <div id="navbar" class="nav-panel">
         <ul class="list-unstyled p-4">
             <li class="mb-3">
-                <a href="map.html" class="text-dark">地圖</a> <!-- 指向地圖頁面 -->
+                <a href="map.html" class="text-dark">地圖</a>
             </li>
             <li class="mb-3">
-                <a href="weather.html" class="text-dark">天氣</a> <!-- 指向天氣頁面 -->
+                <a href="weather.html" class="text-dark">天氣</a>
             </li>
             <li class="mb-3">
-                <a href="ws.html" class="text-dark">水源</a> <!-- 指向水源頁面 -->
+                <a href="ws.html" class="text-dark">水源</a>
             </li>
         </ul>
     </div>
@@ -51,7 +53,7 @@
             </select>
         </div>
 
-        <!-- Google 地圖顯示區 -->
+        <!-- Google 地圖顯示區（Leaflet 地圖將取代此處） -->
         <div id="map" class="api-content border border-dark mb-4" style="height: 300px;">
             <!-- 地圖將在此顯示 -->
         </div>
@@ -73,14 +75,13 @@
     <!-- 引入 Bootstrap JS 和 Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-
+    <!-- 引入 Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <!-- 引入自訂的 JavaScript 檔案 -->
     <script src="./javascripts/navbar.js"></script>
     <script src="./javascripts/sw-register.js"></script>
+    <script src="./javascrips/leaflet-map.js"></script>
     <script src="./db/gomtDB.js"></script>
-    <script src="./javascrips/map_api.js"></script>
 
-    <!-- 引入 Google Maps API -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCzF2kWG5vYsqJVppaPbMHwm23yU4sxwzY&callback=initMap"></script>
 </body>
 </html>
