@@ -5,11 +5,11 @@ const urlsToCache = [
   '/map.html',
   '/weather.html',
   '/ws.html',
-  '/css/map.css',
-  '/css/weather.css',
-  '/js/navbar.js',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  './css/map.css',
+  './css/weather.css',
+  './javascrips/navbar.js',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png'
 ];
 
 // 安裝 Service Worker 並快取資源
