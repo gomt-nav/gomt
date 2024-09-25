@@ -52,3 +52,8 @@ button {
     width: 250px;
     font-size: 1.2rem;
 }
+
+#map {
+    height: 400px; /* 或你所需的高度 */
+    width: 100%;
+}

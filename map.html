@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
     <!-- 自訂的 CSS 檔案 -->
     <link rel="stylesheet" href="./css/map.css">
 </head>
+
 <body>
     <!-- 漢堡選單 -->
     <nav class="navbar bg-body-tertiary fixed-top">
@@ -54,22 +56,25 @@
         </div>
 
         <!-- Google 地圖顯示區（Leaflet 地圖將取代此處） -->
-        <div id="map" class="api-content border border-dark mb-4" style="height: 300px;">
+        <div id="map" class="api-content border border-dark mb-4" style="height: 500px;">
             <!-- 地圖將在此顯示 -->
         </div>
 
         <!-- 路線數據 -->
         <div class="route-info bg-light py-3">
             <div class="d-flex justify-content-around">
-                <div><strong>預估時間</strong><br>0S</div>
-                <div><strong>總距離</strong><br>0KM</div>
-                <div><strong>總爬升</strong><br>0M</div>
-                <div><strong>總下降</strong><br>0M</div>
+                <div><strong>預估時間</strong><br><span class="total-time">00:00:00</span></div>
+                <div><strong>總距離</strong><br><span class="total-distance">0KM</span></div>
+                <div><strong>總爬升</strong><br><span class="total-ascent">0M</span></div>
+                <div><strong>總下降</strong><br><span class="total-descent">0M</span></div>
             </div>
         </div>
+        
 
         <!-- 按鈕 -->
-        <button class="btn btn-success mt-3">規劃路線</button>
+        <button id="recordButton" class="btn btn-success mt-3">開始記錄</button>
+
+
     </div>
 
     <!-- 引入 Bootstrap JS 和 Popper.js -->
@@ -81,7 +86,9 @@
     <script src="./javascripts/navbar.js"></script>
     <script src="./javascripts/sw-register.js"></script>
     <script src="./javascrips/leaflet-map.js"></script>
+    <script src="./javascrips/location.js"></script>
     <script src="./db/gomtDB.js"></script>
 
 </body>
+
 </html>
