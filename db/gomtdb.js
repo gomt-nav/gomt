@@ -35,7 +35,8 @@ function openDatabase() {
         // 建立 routeRecords 物件存儲（路線紀錄）
         // 建立 routeRecords 物件存儲（路線紀錄）
         if (!db.objectStoreNames.contains('routeRecords')) {
-            let routeRecordsStore = db.createObjectStore('routeRecords', { keyPath: 'recordId', autoIncrement: true }); // 自動遞增主鍵
+            let routeRecordsStore = db.createObjectStore('routeRecords', { keyPath: 'recordId', autoIncrement: true });
+
 
             // 建立索引
             routeRecordsStore.createIndex('routeName', 'routeName', { unique: false }); // 索引: 路線名稱

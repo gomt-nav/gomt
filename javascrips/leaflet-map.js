@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 記錄狀態
     var isRecording = false;
+    var geoWatchId = null;
 
     // 時間、距離、海拔等數據
     var startTime, totalDistance = 0, totalElevationGain = 0, totalElevationLoss = 0, prevLatLng = null;
@@ -72,9 +73,9 @@ document.addEventListener("DOMContentLoaded", function () {
             startTime = new Date();
             setInterval(updateTime, 1000);
 
-            // 第二次定位
+            // 第二次定位和持續跟蹤
             if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(function (position) {
+                geoWatchId = navigator.geolocation.watchPosition(function (position) {
                     var lat = position.coords.latitude;
                     var lon = position.coords.longitude;
 
@@ -88,13 +89,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // 更新數據
                     updateDistance(lat, lon);
+                }, function (error) {
+                    console.error("定位錯誤", error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 1000,
+                    timeout: 30000
                 });
             }
         } else {
-            // 停止記錄並跳出儲存視窗
+            // 停止記錄
             isRecording = false;
             recordButton.innerText = "開始記錄";
-            openSaveWindow(); // 彈出視窗的功能還保留，但不執行儲存
+            navigator.geolocation.clearWatch(geoWatchId);
+            openSaveWindow();
         }
     });
 
@@ -125,13 +133,78 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', saveWindowHtml);
-        document.getElementById("saveRoute").addEventListener("click", function () {
-            alert("儲存功能已被移除");
-            document.getElementById("saveModal").remove();
-        });
+        document.getElementById("saveRoute").addEventListener("click", saveRouteToGpx);
         document.getElementById("cancelRoute").addEventListener("click", function () {
             document.getElementById("saveModal").remove();
         });
         new bootstrap.Modal(document.getElementById("saveModal")).show();
+    }
+
+    // 將路徑存為 GPX 並儲存到 IndexedDB
+    function saveRouteToGpx() {
+        const routeName = document.getElementById("routeName").value;
+        const routeCity = document.getElementById("routeCity").value;
+
+        // 獲取預估時間、距離、爬升高度、下降高度等數據
+        const duration = document.getElementById("time").innerText;
+        const distance = document.getElementById("distance").innerText;
+        const elevationGain = document.getElementById("elevationGain").innerText;
+        const elevationLoss = document.getElementById("elevationLoss").innerText;
+
+        // 檢查必填欄位是否都有值
+        if (!routeName || !routeCity) {
+            alert("請輸入路線名稱並選擇城市！");
+            return;
+        }
+
+        // 將路徑數據轉為 GPX 格式
+        let gpxData = `<?xml version="1.0" encoding="UTF-8"?>
+        <gpx version="1.1" creator="GoMT" xmlns="http://www.topografix.com/GPX/1/1">
+            <trk><name>${routeName}</name><trkseg>`;
+        pathCoordinates.forEach(coord => {
+            gpxData += `<trkpt lat="${coord[0]}" lon="${coord[1]}"></trkpt>`;
+        });
+        gpxData += `</trkseg></trk></gpx>`;
+
+        // 打開 IndexedDB 並存儲路徑數據
+        var dbRequest = indexedDB.open('gomtDB', 1);
+
+        dbRequest.onupgradeneeded = function (event) {
+            var db = event.target.result;
+            if (!db.objectStoreNames.contains('routeRecords')) {
+                db.createObjectStore('routeRecords', { keyPath: 'recordId', autoIncrement: true });
+            }
+        };
+
+        dbRequest.onsuccess = function (event) {
+            var db = event.target.result;
+            var transaction = db.transaction(["routeRecords"], "readwrite");
+            var store = transaction.objectStore("routeRecords");
+
+            // 準備要插入的數據
+            var data = {
+                routeName: routeName,
+                date: new Date().toISOString(),
+                duration: duration,
+                distance: distance,
+                elevationGain: elevationGain,
+                elevationLoss: elevationLoss,
+                mtPlace: routeCity,
+                gpx: gpxData
+            };
+
+            store.add(data).onsuccess = function () {
+                alert("路線已成功儲存！");
+                // 刷新頁面
+                location.reload();
+            };
+        };
+
+        dbRequest.onerror = function (event) {
+            console.error("無法開啟資料庫: ", event.target.errorCode);
+        };
+
+        // 移除彈窗
+        document.getElementById("saveModal").remove();
     }
 });
