@@ -12,8 +12,17 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <!-- 自訂的 CSS 檔案 -->
     <link rel="stylesheet" href="./css/map.css">
+    <!-- 引入 Bootstrap JS 和 Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <!-- 引入 Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- 引入自訂的 JavaScript 檔案 -->
+    <script src="./javascripts/navbar.js"></script>
+    <script src="./javascripts/sw-register.js"></script>
+    <script src="./javascrips/leaflet-map.js"></script>
+    <script src="./db/gomtDB.js"></script>
 </head>
-
 <body>
     <!-- 漢堡選單 -->
     <nav class="navbar bg-body-tertiary fixed-top">
@@ -47,14 +56,13 @@
 
         <!-- 日期選擇條 -->
         <div class="date-bar bg-dark text-white py-2 mb-4">
-            <label for="routeDate" class="me-2">選擇路線日期:</label>
-            <input type="date" id="routeDate" class="form-select d-inline w-auto ms-2" aria-label="選擇日期">
             <select class="form-select d-inline w-auto ms-2" aria-label="選擇路線">
                 <option selected>選擇路線</option>
                 <option value="1">路線 1</option>
                 <option value="2">路線 2</option>
             </select>
         </div>
+        
 
         <!-- Google 地圖顯示區（Leaflet 地圖將取代此處） -->
         <div id="map" class="api-content border border-dark mb-4" style="height: 500px;">
@@ -62,35 +70,18 @@
         </div>
 
         <!-- 路線數據 -->
-        <!-- 路線數據 -->
         <div class="route-info bg-light py-3">
             <div class="d-flex justify-content-around">
-                <div><strong>時間</strong><br><span id="time">00:00:00</span></div>
-                <div><strong>總距離</strong><br><span id="distance">0.00 KM</span></div>
-                <div><strong>目前高度</strong><br><span id="currentAltitude">0 M</span></div> <!-- 目前高度 -->
+                <div><strong>預估時間</strong><br><span id="time">00:00:00</span></div>
+                <div><strong>總距離</strong><br><span id="distance">0 KM</span></div>
+                <div><strong>目前高度</strong><br><span id="currentAltitude">0 M</span></div>
             </div>
         </div>
-        
-
-
 
         <!-- 按鈕 -->
         <button id="recordButton" class="btn btn-success mt-3">開始記錄</button>
-
-
     </div>
-
-    <!-- 引入 Bootstrap JS 和 Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <!-- 引入 Leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <!-- 引入自訂的 JavaScript 檔案 -->
-    <script src="./javascrips/navbar.js"></script>
-    <script src="./javascrips/sw-register.js"></script>
-    <script src="./javascrips/leaflet-map.js"></script>
-    <script src="./db/gomtDB.js"></script>
-
+    
 </body>
 
 </html>

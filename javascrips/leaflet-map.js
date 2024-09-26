@@ -1,21 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // 初始化 Leaflet 地圖
-    var map = L.map('map').setView([25.0330, 121.5654], 13); // 初始位置設置為台北市
-
-    // 添加 OpenStreetMap 圖層
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // 用於記錄路徑的多邊線（polyline）
+    var map = L.map('map').setView([25.0330, 121.5654], 13); 
     var pathCoordinates = [];
     var polyline = L.polyline(pathCoordinates, { color: 'red' }).addTo(map);
-
-    // 記錄狀態
     var isRecording = false;
-    var geoWatchId = null;
-
-    // 時間、距離、海拔等數據
     var startTime, totalDistance = 0, totalElevationGain = 0, totalElevationLoss = 0, prevLatLng = null;
 
     // 更新時間函數
@@ -28,16 +15,16 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("time").innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // 更新路徑距離
+    // 更新路徑距離和高度變化
     function updateDistance(lat, lon) {
         if (prevLatLng) {
             var newLatLng = L.latLng(lat, lon);
-            var distance = prevLatLng.distanceTo(newLatLng) / 1000; // 轉換為公里
+            var distance = prevLatLng.distanceTo(newLatLng) / 1000; 
             totalDistance += distance;
             document.getElementById("distance").innerText = totalDistance.toFixed(2) + " KM";
 
-            // 模擬爬升和下降（實際應使用精確的高程數據）
-            var elevationChange = Math.random() * 10 - 5; // 模擬高程變化
+            // 模擬高度變化
+            var elevationChange = Math.random() * 10 - 5; 
             if (elevationChange > 0) {
                 totalElevationGain += elevationChange;
                 document.getElementById("elevationGain").innerText = totalElevationGain.toFixed(2) + " M";
@@ -49,10 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
         prevLatLng = L.latLng(lat, lon);
     }
 
-    // 地圖上的標記
     var marker = L.marker([25.0330, 121.5654]).addTo(map).bindPopup('移動中...').openPopup();
-
-    // 首次定位
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
             var lat = position.coords.latitude;
@@ -62,51 +46,33 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 開始/停止記錄
     var recordButton = document.getElementById("recordButton");
-
     recordButton.addEventListener("click", function () {
         if (!isRecording) {
-            // 開始記錄
             isRecording = true;
             recordButton.innerText = "停止記錄";
             startTime = new Date();
             setInterval(updateTime, 1000);
 
-            // 第二次定位和持續跟蹤
             if (navigator.geolocation) {
-                geoWatchId = navigator.geolocation.watchPosition(function (position) {
+                navigator.geolocation.watchPosition(function (position) {
                     var lat = position.coords.latitude;
                     var lon = position.coords.longitude;
-
-                    // 更新標記位置
                     marker.setLatLng([lat, lon]);
                     map.setView([lat, lon], map.getZoom());
 
-                    // 添加到路徑
                     pathCoordinates.push([lat, lon]);
                     polyline.setLatLngs(pathCoordinates);
-
-                    // 更新數據
                     updateDistance(lat, lon);
-                }, function (error) {
-                    console.error("定位錯誤", error);
-                }, {
-                    enableHighAccuracy: true,
-                    maximumAge: 1000,
-                    timeout: 30000
                 });
             }
         } else {
-            // 停止記錄
             isRecording = false;
             recordButton.innerText = "開始記錄";
-            navigator.geolocation.clearWatch(geoWatchId);
-            openSaveWindow();
+            openSaveWindow(); 
         }
     });
 
-    // 彈出儲存視窗
     function openSaveWindow() {
         const saveWindowHtml = `
             <div class="modal" tabindex="-1" id="saveModal">
@@ -140,24 +106,19 @@ document.addEventListener("DOMContentLoaded", function () {
         new bootstrap.Modal(document.getElementById("saveModal")).show();
     }
 
-    // 將路徑存為 GPX 並儲存到 IndexedDB
     function saveRouteToGpx() {
         const routeName = document.getElementById("routeName").value;
         const routeCity = document.getElementById("routeCity").value;
-
-        // 獲取預估時間、距離、爬升高度、下降高度等數據
         const duration = document.getElementById("time").innerText;
         const distance = document.getElementById("distance").innerText;
         const elevationGain = document.getElementById("elevationGain").innerText;
         const elevationLoss = document.getElementById("elevationLoss").innerText;
 
-        // 檢查必填欄位是否都有值
         if (!routeName || !routeCity) {
             alert("請輸入路線名稱並選擇城市！");
             return;
         }
 
-        // 將路徑數據轉為 GPX 格式
         let gpxData = `<?xml version="1.0" encoding="UTF-8"?>
         <gpx version="1.1" creator="GoMT" xmlns="http://www.topografix.com/GPX/1/1">
             <trk><name>${routeName}</name><trkseg>`;
@@ -166,9 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         gpxData += `</trkseg></trk></gpx>`;
 
-        // 打開 IndexedDB 並存儲路徑數據
         var dbRequest = indexedDB.open('gomtDB', 1);
-
         dbRequest.onupgradeneeded = function (event) {
             var db = event.target.result;
             if (!db.objectStoreNames.contains('routeRecords')) {
@@ -181,7 +140,6 @@ document.addEventListener("DOMContentLoaded", function () {
             var transaction = db.transaction(["routeRecords"], "readwrite");
             var store = transaction.objectStore("routeRecords");
 
-            // 準備要插入的數據
             var data = {
                 routeName: routeName,
                 date: new Date().toISOString(),
@@ -195,16 +153,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
             store.add(data).onsuccess = function () {
                 alert("路線已成功儲存！");
-                // 刷新頁面
+                document.getElementById("saveModal").remove();
                 location.reload();
+            };
+
+            store.onerror = function (event) {
+                console.error("新增資料時發生錯誤: ", event.target.error);
             };
         };
 
         dbRequest.onerror = function (event) {
             console.error("無法開啟資料庫: ", event.target.errorCode);
         };
-
-        // 移除彈窗
-        document.getElementById("saveModal").remove();
     }
 });
