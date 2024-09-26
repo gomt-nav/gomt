@@ -1,67 +1,137 @@
-// 初始化 Leaflet 地圖
 document.addEventListener("DOMContentLoaded", function () {
-    var map = L.map('map').setView([25.0330, 121.5654], 13); // 台北市位置
+    // 初始化 Leaflet 地圖
+    var map = L.map('map').setView([25.0330, 121.5654], 13); // 初始位置設置為台北市
 
     // 添加 OpenStreetMap 圖層
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // 定位功能
-    navigator.geolocation.getCurrentPosition(success, error);
-    var marker, startTime, intervalId;
-    var totalDistance = 0, previousPosition = null, totalAscent = 0, totalDescent = 0;
+    // 用於記錄路徑的多邊線（polyline）
+    var pathCoordinates = [];
+    var polyline = L.polyline(pathCoordinates, { color: 'red' }).addTo(map);
 
-    // 開始記錄時按鈕狀態切換
-    document.querySelector('.btn-success').addEventListener('click', function () {
-        if (this.innerText === "開始記錄") {
-            this.innerText = "停止記錄";
-            startTime = new Date(); // 開始時間
-            intervalId = setInterval(updateTime, 1000); // 每秒更新時間
-            navigator.geolocation.watchPosition(success, error);
+    // 記錄狀態
+    var isRecording = false;
+
+    // 時間、距離、海拔等數據
+    var startTime, totalDistance = 0, totalElevationGain = 0, totalElevationLoss = 0, prevLatLng = null;
+
+    // 更新時間函數
+    function updateTime() {
+        var currentTime = new Date();
+        var elapsedTime = Math.floor((currentTime - startTime) / 1000);
+        var hours = Math.floor(elapsedTime / 3600);
+        var minutes = Math.floor((elapsedTime % 3600) / 60);
+        var seconds = elapsedTime % 60;
+        document.getElementById("time").innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // 更新路徑距離
+    function updateDistance(lat, lon) {
+        if (prevLatLng) {
+            var newLatLng = L.latLng(lat, lon);
+            var distance = prevLatLng.distanceTo(newLatLng) / 1000; // 轉換為公里
+            totalDistance += distance;
+            document.getElementById("distance").innerText = totalDistance.toFixed(2) + " KM";
+
+            // 模擬爬升和下降（實際應使用精確的高程數據）
+            var elevationChange = Math.random() * 10 - 5; // 模擬高程變化
+            if (elevationChange > 0) {
+                totalElevationGain += elevationChange;
+                document.getElementById("elevationGain").innerText = totalElevationGain.toFixed(2) + " M";
+            } else {
+                totalElevationLoss += Math.abs(elevationChange);
+                document.getElementById("elevationLoss").innerText = totalElevationLoss.toFixed(2) + " M";
+            }
+        }
+        prevLatLng = L.latLng(lat, lon);
+    }
+
+    // 地圖上的標記
+    var marker = L.marker([25.0330, 121.5654]).addTo(map).bindPopup('移動中...').openPopup();
+
+    // 首次定位
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+            map.setView([lat, lon], 13);
+            marker.setLatLng([lat, lon]);
+        });
+    }
+
+    // 開始/停止記錄
+    var recordButton = document.getElementById("recordButton");
+
+    recordButton.addEventListener("click", function () {
+        if (!isRecording) {
+            // 開始記錄
+            isRecording = true;
+            recordButton.innerText = "停止記錄";
+            startTime = new Date();
+            setInterval(updateTime, 1000);
+
+            // 第二次定位
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(function (position) {
+                    var lat = position.coords.latitude;
+                    var lon = position.coords.longitude;
+
+                    // 更新標記位置
+                    marker.setLatLng([lat, lon]);
+                    map.setView([lat, lon], map.getZoom());
+
+                    // 添加到路徑
+                    pathCoordinates.push([lat, lon]);
+                    polyline.setLatLngs(pathCoordinates);
+
+                    // 更新數據
+                    updateDistance(lat, lon);
+                });
+            }
         } else {
-            this.innerText = "開始記錄";
-            clearInterval(intervalId); // 停止時間更新
+            // 停止記錄並跳出儲存視窗
+            isRecording = false;
+            recordButton.innerText = "開始記錄";
+            openSaveWindow(); // 彈出視窗的功能還保留，但不執行儲存
         }
     });
 
-    // 成功定位的回調函數
-    function success(position) {
-        var latlng = [position.coords.latitude, position.coords.longitude];
-        if (!marker) {
-            marker = L.marker(latlng).addTo(map).bindPopup('移動中...');
-        } else {
-            marker.setLatLng(latlng);
-        }
-        map.setView(latlng, 13);
-
-        // 計算距離
-        if (previousPosition) {
-            var distance = map.distance(latlng, previousPosition);
-            totalDistance += distance / 1000; // 轉換為公里
-            document.querySelector('.total-distance').innerText = totalDistance.toFixed(2) + " KM";
-        }
-        previousPosition = latlng;
+    // 彈出儲存視窗
+    function openSaveWindow() {
+        const saveWindowHtml = `
+            <div class="modal" tabindex="-1" id="saveModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">建立路線檔</h5>
+                        </div>
+                        <div class="modal-body">
+                            <label for="routeName">輸入檔名:</label>
+                            <input type="text" id="routeName" class="form-control" placeholder="輸入檔名" />
+                            <label for="routeCity">選擇城市:</label>
+                            <select id="routeCity" class="form-select">
+                                <option value="台北">台北</option>
+                                <option value="高雄">高雄</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="saveRoute">儲存</button>
+                            <button class="btn btn-secondary" id="cancelRoute">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', saveWindowHtml);
+        document.getElementById("saveRoute").addEventListener("click", function () {
+            alert("儲存功能已被移除");
+            document.getElementById("saveModal").remove();
+        });
+        document.getElementById("cancelRoute").addEventListener("click", function () {
+            document.getElementById("saveModal").remove();
+        });
+        new bootstrap.Modal(document.getElementById("saveModal")).show();
     }
-
-    // 錯誤處理
-    function error() {
-        alert('無法獲取您的位置');
-    }
-
-    // 時間格式轉換
-    function formatTime(seconds) {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
-
-    // 更新時間
-    function updateTime() {
-        var currentTime = new Date();
-        var timeElapsed = Math.floor((currentTime - startTime) / 1000); // 秒
-        document.querySelector('.total-time').innerText = formatTime(timeElapsed);
-    }
-
 });

@@ -61,15 +61,17 @@
         </div>
 
         <!-- 路線數據 -->
+        <!-- 路線數據 -->
         <div class="route-info bg-light py-3">
             <div class="d-flex justify-content-around">
-                <div><strong>預估時間</strong><br><span class="total-time">00:00:00</span></div>
-                <div><strong>總距離</strong><br><span class="total-distance">0KM</span></div>
-                <div><strong>總爬升</strong><br><span class="total-ascent">0M</span></div>
-                <div><strong>總下降</strong><br><span class="total-descent">0M</span></div>
+                <div><strong>預估時間</strong><br><span id="time">00:00:00</span></div>
+                <div><strong>總距離</strong><br><span id="distance">0KM</span></div>
+                <div><strong>總爬升</strong><br><span id="elevationGain">0M</span></div>
+                <div><strong>總下降</strong><br><span id="elevationLoss">0M</span></div>
             </div>
         </div>
-        
+
+
 
         <!-- 按鈕 -->
         <button id="recordButton" class="btn btn-success mt-3">開始記錄</button>
@@ -83,10 +85,9 @@
     <!-- 引入 Leaflet.js -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <!-- 引入自訂的 JavaScript 檔案 -->
-    <script src="./javascripts/navbar.js"></script>
-    <script src="./javascripts/sw-register.js"></script>
+    <script src="./javascrips/navbar.js"></script>
+    <script src="./javascrips/sw-register.js"></script>
     <script src="./javascrips/leaflet-map.js"></script>
-    <script src="./javascrips/location.js"></script>
     <script src="./db/gomtDB.js"></script>
 
 </body>
