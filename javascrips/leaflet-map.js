@@ -212,4 +212,55 @@ document.addEventListener("DOMContentLoaded", function () {
         // 移除彈窗
         document.getElementById("saveModal").remove();
     }
+
+    // 同步 IndexedDB 資料到 Firebase
+    // 檢查應用程式是否已在線上，如果在線上則立即同步
+if (navigator.onLine) {
+    syncIndexedDBToFirebase();
+}
+
+// 監聽網路狀態變更事件，當從離線變為在線時進行同步
+window.addEventListener('online', syncIndexedDBToFirebase);
+
+async function syncIndexedDBToFirebase() {
+    const dbRequest = indexedDB.open('gomtDB', 1);
+
+    dbRequest.onsuccess = function (event) {
+        const db = event.target.result;
+        const transaction = db.transaction(['routeRecords'], 'readonly');
+        const store = transaction.objectStore('routeRecords');
+        const getAllRecords = store.getAll();
+
+        getAllRecords.onsuccess = async function () {
+            const records = getAllRecords.result;
+            console.log(`找到 ${records.length} 筆記錄準備同步.`);
+            for (let record of records) {
+                console.log('正在將記錄同步到 Firebase: ', record);
+                await syncRecordToFirebase(record);
+            }
+        };
+    };
+
+    dbRequest.onerror = function (event) {
+        console.error("無法開啟 IndexedDB: ", event.target.errorCode);
+    };
+}
+
+async function syncRecordToFirebase(record) {
+    try {
+        console.log("正在嘗試同步記錄: ", record);
+        const docRef = await addDoc(collection(db, "routes"), {
+            routeName: record.routeName,
+            date: record.date,
+            duration: record.duration,
+            distance: record.distance,
+            mtPlace: record.mtPlace,
+            gpx: record.gpx
+        });
+        console.log("記錄已成功同步到 Firebase，文件 ID: ", docRef.id);
+    } catch (error) {
+        console.error("同步記錄到 Firebase 時出錯: ", error);
+    }
+}
+
 });
