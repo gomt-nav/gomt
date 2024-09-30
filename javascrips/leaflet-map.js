@@ -48,11 +48,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // 地圖上的標記
-    var marker = L.marker([25.0330, 121.5654]).addTo(map).bindPopup('現在位置...').openPopup();
+    var marker = L.marker([25.0330, 121.5654]).addTo(map).bindPopup('移動中...').openPopup();
 
     // 首次定位
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
+            console.log(position.coords);  // 確認coords中是否有altitude
             var lat = position.coords.latitude;
             var lon = position.coords.longitude;
             var altitude = position.coords.altitude;  // 獲取海拔高度
@@ -210,47 +211,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 移除彈窗
         document.getElementById("saveModal").remove();
-    }
-
-    // 同步 IndexedDB 資料到 Firebase
-    window.addEventListener('online', syncIndexedDBToFirebase);
-
-    async function syncIndexedDBToFirebase() {
-        const dbRequest = indexedDB.open('gomtDB', 1);
-
-        dbRequest.onsuccess = function (event) {
-            const db = event.target.result;
-            const transaction = db.transaction(['routeRecords'], 'readonly');
-            const store = transaction.objectStore('routeRecords');
-            const getAllRecords = store.getAll();
-
-            getAllRecords.onsuccess = function () {
-                const records = getAllRecords.result;
-                records.forEach(record => {
-                    // 將每條記錄同步至 Firebase
-                    syncRecordToFirebase(record);
-                });
-            };
-        };
-
-        dbRequest.onerror = function (event) {
-            console.error("無法開啟 IndexedDB: ", event.target.errorCode);
-        };
-    }
-
-    async function syncRecordToFirebase(record) {
-        try {
-            const docRef = await addDoc(collection(db, "routes"), {
-                routeName: record.routeName,
-                date: record.date,
-                duration: record.duration,
-                distance: record.distance,
-                mtPlace: record.mtPlace,
-                gpx: record.gpx
-            });
-            console.log("資料已同步至 Firebase，記錄 ID:", docRef.id);
-        } catch (error) {
-            console.error("同步到 Firebase 時發生錯誤:", error);
-        }
     }
 });
