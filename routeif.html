@@ -6,6 +6,8 @@
 <title>Go Mountain</title>
 <link rel="stylesheet" href="./css/routeif.css">
 <link rel="manifest" href="/manifest.json">
+<script src="./javascrips/navbar.js"></script>
+<script type="module" src="./javascrips/routeif.js"></script> 
 </head>
 <body>
 <div class="menu-toggle" id="mobile-menu">
@@ -18,29 +20,14 @@
     <a href="weather.html">天氣</a>
     <a href="ws.html">水源</a>
 </nav>
+
 <div class="main-content">
     <h1 class="page-title">路線資料</h1>
-    <!-- 其他內容 -->
-</div>
-
-<div class="main-content">
-    <!-- 內容會根據使用者是否登入顯示 -->
-    <div id="loggedOut" class="content-section">
-        <button>登入 GO Mountain</button>
-    </div>
-    <div id="loggedIn" class="content-section hidden">
-        <!-- 此處將從API動態載入資料 -->
+    <div id="routeContainer">
+        <!-- 動態加載的資料框會放在這裡 -->
     </div>
 </div>
-<script src="./javascrips/navbar.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-    var loggedIn = false;  // 根據實際情況修改此變量
-    document.getElementById('loggedOut').style.display = loggedIn ? 'none' : 'block';
-    document.getElementById('loggedIn').style.display = loggedIn ? 'block' : 'none';
-});
 
-</script>
-<script src="./javascrips/sw-register.js"></script>
+
 </body>
 </html>

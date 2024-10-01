@@ -63,6 +63,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // 定義全域變數來追蹤總爬升和總下降
+    var totalElevationGain = 0; // 總爬升
+    var totalElevationLoss = 0; // 總下降
+    var prevAltitude = null;    // 前一次的海拔高度
+
     // 開始/停止記錄
     var recordButton = document.getElementById("recordButton");
 
@@ -92,11 +97,27 @@ document.addEventListener("DOMContentLoaded", function () {
                     // 更新數據
                     updateDistance(lat, lon);
                     updateElevation(altitude); // 更新海拔高度
-                }, 
-                function(error) {
+
+                    // 計算爬升與下降
+                    if (prevAltitude !== null && altitude !== null) {
+                        var elevationChange = altitude - prevAltitude;
+                        if (elevationChange > 0) {
+                            totalElevationGain += elevationChange; // 爬升
+                        } else if (elevationChange < 0) {
+                            totalElevationLoss += Math.abs(elevationChange); // 下降
+                        }
+                    }
+
+                    // 記住當前的高度，供下次比較
+                    prevAltitude = altitude;
+
+                    // 更新頁面上顯示的總爬升與總下降高度
+                    document.getElementById("elevationGain").innerText = totalElevationGain.toFixed(2) + " M";
+                    document.getElementById("elevationLoss").innerText = totalElevationLoss.toFixed(2) + " M";
+
+                }, function (error) {
                     console.error("定位失敗: ", error);
-                }, 
-                { enableHighAccuracy: true });  // 啟用高精度模式
+                }, { enableHighAccuracy: true });  // 啟用高精度模式
             }
         } else {
             // 停止記錄
@@ -109,29 +130,29 @@ document.addEventListener("DOMContentLoaded", function () {
     // 彈出儲存視窗
     function openSaveWindow() {
         const saveWindowHtml = `
-            <div class="modal" tabindex="-1" id="saveModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">建立路線檔</h5>
-                        </div>
-                        <div class="modal-body">
-                            <label for="routeName">輸入檔名:</label>
-                            <input type="text" id="routeName" class="form-control" placeholder="輸入檔名" />
-                            <label for="routeCity">選擇城市:</label>
-                            <select id="routeCity" class="form-select">
-                                <option value="台北">台北</option>
-                                <option value="高雄">高雄</option>
-                            </select>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-primary" id="saveRoute">儲存</button>
-                            <button class="btn btn-secondary" id="cancelRoute">取消</button>
-                        </div>
+        <div class="modal" tabindex="-1" id="saveModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">建立路線檔</h5>
+                    </div>
+                    <div class="modal-body">
+                        <label for="routeName">輸入檔名:</label>
+                        <input type="text" id="routeName" class="form-control" placeholder="輸入檔名" />
+                        <label for="routeCity">選擇城市:</label>
+                        <select id="routeCity" class="form-select">
+                            <option value="台北">台北</option>
+                            <option value="高雄">高雄</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" id="saveRoute">儲存</button>
+                        <button class="btn btn-secondary" id="cancelRoute">取消</button>
                     </div>
                 </div>
             </div>
-        `;
+        </div>
+    `;
         document.body.insertAdjacentHTML('beforeend', saveWindowHtml);
         document.getElementById("saveRoute").addEventListener("click", saveRouteToGpx);
         document.getElementById("cancelRoute").addEventListener("click", function () {
@@ -157,8 +178,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 將路徑數據轉為 GPX 格式
         let gpxData = `<?xml version="1.0" encoding="UTF-8"?>
-        <gpx version="1.1" creator="GoMT" xmlns="http://www.topografix.com/GPX/1/1">
-            <trk><name>${routeName}</name><trkseg>`;
+    <gpx version="1.1" creator="GoMT" xmlns="http://www.topografix.com/GPX/1/1">
+        <trk><name>${routeName}</name><trkseg>`;
         pathCoordinates.forEach(coord => {
             gpxData += `<trkpt lat="${coord[0]}" lon="${coord[1]}"></trkpt>`;
         });
@@ -166,13 +187,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 打開 IndexedDB
         var dbRequest = indexedDB.open('gomtDB', 1);
-
-        dbRequest.onupgradeneeded = function (event) {
-            var db = event.target.result;
-            if (!db.objectStoreNames.contains('routeRecords')) {
-                db.createObjectStore('routeRecords', { keyPath: 'recordId', autoIncrement: true });
-            }
-        };
 
         dbRequest.onsuccess = function (event) {
             var db = event.target.result;
@@ -186,7 +200,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 duration: duration,
                 distance: distance,
                 mtPlace: routeCity,
-                gpx: gpxData
+                gpx: gpxData,
+                elevationGain: totalElevationGain.toFixed(2) + " M",
+                elevationLoss: totalElevationLoss.toFixed(2) + " M"
             };
 
             // 確保資料有正確的數據
@@ -212,55 +228,5 @@ document.addEventListener("DOMContentLoaded", function () {
         // 移除彈窗
         document.getElementById("saveModal").remove();
     }
-
-    // 同步 IndexedDB 資料到 Firebase
-    // 檢查應用程式是否已在線上，如果在線上則立即同步
-if (navigator.onLine) {
-    syncIndexedDBToFirebase();
-}
-
-// 監聽網路狀態變更事件，當從離線變為在線時進行同步
-window.addEventListener('online', syncIndexedDBToFirebase);
-
-async function syncIndexedDBToFirebase() {
-    const dbRequest = indexedDB.open('gomtDB', 1);
-
-    dbRequest.onsuccess = function (event) {
-        const db = event.target.result;
-        const transaction = db.transaction(['routeRecords'], 'readonly');
-        const store = transaction.objectStore('routeRecords');
-        const getAllRecords = store.getAll();
-
-        getAllRecords.onsuccess = async function () {
-            const records = getAllRecords.result;
-            console.log(`找到 ${records.length} 筆記錄準備同步.`);
-            for (let record of records) {
-                console.log('正在將記錄同步到 Firebase: ', record);
-                await syncRecordToFirebase(record);
-            }
-        };
-    };
-
-    dbRequest.onerror = function (event) {
-        console.error("無法開啟 IndexedDB: ", event.target.errorCode);
-    };
-}
-
-async function syncRecordToFirebase(record) {
-    try {
-        console.log("正在嘗試同步記錄: ", record);
-        const docRef = await addDoc(collection(db, "routes"), {
-            routeName: record.routeName,
-            date: record.date,
-            duration: record.duration,
-            distance: record.distance,
-            mtPlace: record.mtPlace,
-            gpx: record.gpx
-        });
-        console.log("記錄已成功同步到 Firebase，文件 ID: ", docRef.id);
-    } catch (error) {
-        console.error("同步記錄到 Firebase 時出錯: ", error);
-    }
-}
 
 });
