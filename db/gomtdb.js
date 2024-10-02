@@ -1,5 +1,5 @@
 const DB_NAME = 'gomtDB'; // 定義資料庫名稱
-const DB_VERSION = 1; // 設定資料庫版本號
+const DB_VERSION = 2; // 設定資料庫版本號
 
 let db; // 儲存資料庫的變數
 
