@@ -1,17 +1,25 @@
 // 引入 Firebase Firestore 所需的庫
-import { getFirestore, collection, addDoc, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // 引入 Firebase 的 Firestore 實例
 import { firestoreDB } from './firebase-config.js';
 
+// 啟用 Firebase Firestore 離線持久化
+enableIndexedDbPersistence(firestoreDB)
+    .catch((err) => {
+        if (err.code == 'failed-precondition') {
+            console.error("無法啟用持久化：多個分頁開啟。");
+        } else if (err.code == 'unimplemented') {
+            console.error("目前的瀏覽器不支援持久化。");
+        }
+    });
+
 // 每次執行操作時進行同步
 async function syncIndexedDBToFirebase() {
-    const dbRequest = indexedDB.open('gomtDB', 2); // 確保資料庫版本提升至 2 以觸發升級
+    const dbRequest = indexedDB.open('gomtDB', 2);
 
     dbRequest.onupgradeneeded = function (event) {
         const db = event.target.result;
-
-        // 如果 'routeRecords' 尚未存在，則創建
         if (!db.objectStoreNames.contains('routeRecords')) {
             db.createObjectStore('routeRecords', { keyPath: 'recordId', autoIncrement: true });
             console.log("routeRecords object store 已創建");
@@ -20,8 +28,6 @@ async function syncIndexedDBToFirebase() {
 
     dbRequest.onsuccess = function (event) {
         const db = event.target.result;
-
-        // 確保 routeRecords 存在於資料庫中
         if (!db.objectStoreNames.contains('routeRecords')) {
             console.error("routeRecords object store 不存在。請檢查資料庫升級邏輯。");
             return;

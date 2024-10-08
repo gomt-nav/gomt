@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 初始化 Leaflet 地圖
     var map = L.map('map').setView([25.0330, 121.5654], 13); // 初始位置設置為台北市
 
+    // 設定全局 marker 的圖示
     L.Marker.prototype.options.icon = L.icon({
         iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
         shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -12,7 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
         popupAnchor: [1, -34],
         shadowSize: [41, 41]
     });
-    
 
     // 添加 OpenStreetMap 圖層
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -20,8 +20,27 @@ document.addEventListener("DOMContentLoaded", function () {
     }).addTo(map);
 
     // 用於記錄路徑的多邊線（polyline）
-    var pathCoordinates = []; // 在這裡初始化為全域變數
+    var pathCoordinates = []; // 初始化為全局變數
     var polyline = L.polyline(pathCoordinates, { color: 'red' }).addTo(map);
+
+    // 運算數據的變數
+    var totalDistance = 0; // 總距離
+    var prevLatLng = null; // 上一個點的位置
+    var totalElevationGain = 0; // 總爬升
+    var prevAltitude = null; // 上一次的海拔
+    var startTime = null; // 開始時間
+
+    // 更新時間、距離、高度的 UI
+    function updateUI() {
+        const currentTime = new Date();
+        const elapsedTime = Math.floor((currentTime - startTime) / 1000); // 秒數
+        const hours = Math.floor(elapsedTime / 3600);
+        const minutes = Math.floor((elapsedTime % 3600) / 60);
+        const seconds = elapsedTime % 60;
+        document.getElementById("time").innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById("distance").innerText = totalDistance.toFixed(2) + " KM";
+        document.getElementById("elevation").innerText = totalElevationGain.toFixed(2) + " M";
+    }
 
     // 解析 URL 參數，獲取 routeId
     const urlParams = new URLSearchParams(window.location.search);
@@ -48,25 +67,23 @@ document.addEventListener("DOMContentLoaded", function () {
             request.onsuccess = function (event) {
                 const route = event.target.result;
                 if (route && route.gpx) {
-                    const gpxLayer = new L.GPX(route.gpx, { async: true }).addTo(map);
+                    gpxLayer = new L.GPX(route.gpx, { async: true }).addTo(map);
                     gpxLayer.on('loaded', function (e) {
                         map.fitBounds(e.target.getBounds()); // 調整地圖視野到 GPX 範圍
-            
-                        // 確保只處理具有 getLatLngs() 方法的圖層
+
+                        // 只處理支援 getLatLngs() 的圖層
                         pathCoordinates = gpxLayer.getLayers().flatMap(layer => {
                             if (typeof layer.getLatLngs === 'function') {
                                 return layer.getLatLngs();
                             }
                             return [];
                         });
-            
-                        console.log(pathCoordinates); // 檢查 pathCoordinates 是否正確取得
+                        console.log(pathCoordinates); // 檢查是否正確取得 pathCoordinates
                     });
                 } else {
                     console.error("未找到對應的 GPX 資料");
                 }
             };
-            
 
             request.onerror = function (event) {
                 console.error("無法從 IndexedDB 中讀取 GPX 資料: ", event.target.errorCode);
@@ -91,6 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
             navigator.geolocation.watchPosition(function (position) {
                 var lat = position.coords.latitude;
                 var lon = position.coords.longitude;
+                var altitude = position.coords.altitude;
                 var userLatLng = L.latLng(lat, lon);
 
                 // 確保 pathCoordinates 有資料且 nearestPoint 存在
@@ -114,6 +132,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 // 更新標記位置
                 marker.setLatLng(userLatLng);
                 map.setView(userLatLng, map.getZoom());
+
+                // 計算總距離
+                if (prevLatLng) {
+                    var distance = prevLatLng.distanceTo(userLatLng) / 1000; // 轉換為公里
+                    totalDistance += distance;
+                }
+                prevLatLng = userLatLng;
+
+                // 計算爬升
+                if (prevAltitude !== null && altitude !== null) {
+                    var elevationChange = altitude - prevAltitude;
+                    if (elevationChange > 0) {
+                        totalElevationGain += elevationChange;
+                    }
+                }
+                prevAltitude = altitude;
+
+                // 更新 UI
+                updateUI();
 
             }, function (error) {
                 console.error("導航失敗: ", error);
@@ -149,12 +186,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!isRecording) {
             isRecording = true;
             recordButton.innerText = "停止記錄";
+            startTime = new Date(); // 記錄開始時間
 
             // 開始記錄過程
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(function (position) {
                     var lat = position.coords.latitude;
                     var lon = position.coords.longitude;
+                    var altitude = position.coords.altitude;
 
                     // 更新地圖上的位置
                     marker.setLatLng([lat, lon]);
@@ -163,6 +202,25 @@ document.addEventListener("DOMContentLoaded", function () {
                     // 將位置加入路徑
                     pathCoordinates.push([lat, lon]);
                     polyline.setLatLngs(pathCoordinates);
+
+                    // 計算總距離
+                    if (prevLatLng) {
+                        var distance = prevLatLng.distanceTo(L.latLng(lat, lon)) / 1000; // 轉換為公里
+                        totalDistance += distance;
+                    }
+                    prevLatLng = L.latLng(lat, lon);
+
+                    // 計算爬升
+                    if (prevAltitude !== null && altitude !== null) {
+                        var elevationChange = altitude - prevAltitude;
+                        if (elevationChange > 0) {
+                            totalElevationGain += elevationChange;
+                        }
+                    }
+                    prevAltitude = altitude;
+
+                    // 更新 UI
+                    updateUI();
 
                 }, function (error) {
                     console.error("定位失敗: ", error);
@@ -215,9 +273,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const routeName = document.getElementById("routeName").value;
         const routeCity = document.getElementById("routeCity").value;
 
-        // 獲取預估時間、距離等數據
+        // 獲取預估時間、距離、海拔高度等數據
         const duration = document.getElementById("time").innerText;
         const distance = document.getElementById("distance").innerText;
+        const elevationGain = document.getElementById("elevation").innerText;
 
         // 檢查必填欄位是否都有值
         if (!routeName || !routeCity) {
@@ -248,6 +307,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 date: new Date().toISOString(),
                 duration: duration,
                 distance: distance,
+                elevationGain: elevationGain,
+                elevationLoss: elevationLoss ,
                 mtPlace: routeCity,
                 gpx: gpxData
             };
