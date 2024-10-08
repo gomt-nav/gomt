@@ -54,7 +54,7 @@ function loadRoutesFromDB() {
             `;
             // 點擊進入 map.html 並傳遞 routeId 作為 URL 參數
             routeBox.addEventListener('click', function () {
-                window.location.href = `map.html?routeId=${route.recordId}`;
+                window.location.href = `mapdetails.html?routeId=${route.recordId}`;
             });
 
             routeContainer.appendChild(routeBox);

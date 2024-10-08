@@ -308,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 duration: duration,
                 distance: distance,
                 elevationGain: elevationGain,
-                elevationLoss: elevationLoss ,
+                // elevationLoss: elevationLoss,
                 mtPlace: routeCity,
                 gpx: gpxData
             };
