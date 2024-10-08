@@ -1,10 +1,10 @@
-import { getGPXDataFromIndexedDB } from './indexeddb-helper.js';
+import { getGPXDataFromIndexedDB } from '../db/indexeddb-helper.js';
 
 document.addEventListener("DOMContentLoaded", function () {
     // 初始化 Leaflet 地圖
     var map = L.map('map').setView([25.0330, 121.5654], 13); // 初始位置設置為台北市
 
-    // 設定全局 marker 的圖示
+    // 設定全局 marker 的圖示，這裡使用 Leaflet 的默認圖像
     L.Marker.prototype.options.icon = L.icon({
         iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
         shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -99,66 +99,99 @@ document.addEventListener("DOMContentLoaded", function () {
     var marker = L.marker([25.0330, 121.5654]).addTo(map).bindPopup('現在位置').openPopup();
 
     // 增加「開始導航」按鈕
-    const navButtonHtml = `<button id="startNavigation" class="btn btn-success">開始導航</button>`;
-    document.body.insertAdjacentHTML('beforeend', navButtonHtml);
+   // 新增「開始導航」按鈕
 
-    // 導航功能
-    document.getElementById("startNavigation").addEventListener("click", function () {
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(function (position) {
-                var lat = position.coords.latitude;
-                var lon = position.coords.longitude;
-                var altitude = position.coords.altitude;
-                var userLatLng = L.latLng(lat, lon);
 
-                // 確保 pathCoordinates 有資料且 nearestPoint 存在
-                if (pathCoordinates && pathCoordinates.length > 0) {
-                    var nearestPoint = getNearestPointOnRoute(userLatLng, pathCoordinates);
-                    if (nearestPoint) {
-                        var distanceToRoute = userLatLng.distanceTo(nearestPoint);
+// 導航功能
+document.getElementById("startNavigation").addEventListener("click", function () {
+    // 檢查是否匯入了 GPX 資料
+    if (!pathCoordinates || pathCoordinates.length === 0) {
+        // 如果未匯入 GPX 資料，顯示彈出視窗提示
+        showNoGPXModal();
+        return;
+    }
 
-                        if (distanceToRoute > 20) {
-                            marker.bindPopup('偏離路線，請調整方向').openPopup();
-                        } else {
-                            marker.bindPopup('沿著路線行走').openPopup();
-                        }
+    // 如果匯入了 GPX 資料，開始導航
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(function (position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+            var altitude = position.coords.altitude;
+            var userLatLng = L.latLng(lat, lon);
+
+            // 確保 pathCoordinates 有資料且 nearestPoint 存在
+            if (pathCoordinates && pathCoordinates.length > 0) {
+                var nearestPoint = getNearestPointOnRoute(userLatLng, pathCoordinates);
+                if (nearestPoint) {
+                    var distanceToRoute = userLatLng.distanceTo(nearestPoint);
+
+                    if (distanceToRoute > 20) {
+                        marker.bindPopup('偏離路線，請調整方向').openPopup();
                     } else {
-                        marker.bindPopup('無法找到最近的路徑點').openPopup();
+                        marker.bindPopup('沿著路線行走').openPopup();
                     }
                 } else {
-                    marker.bindPopup('無路徑可供導航，請先至路線資料匯入').openPopup();
+                    marker.bindPopup('無法找到最近的路徑點').openPopup();
                 }
+            }
 
-                // 更新標記位置
-                marker.setLatLng(userLatLng);
-                map.setView(userLatLng, map.getZoom());
+            // 更新標記位置
+            marker.setLatLng(userLatLng);
+            map.setView(userLatLng, map.getZoom());
 
-                // 計算總距離
-                if (prevLatLng) {
-                    var distance = prevLatLng.distanceTo(userLatLng) / 1000; // 轉換為公里
-                    totalDistance += distance;
+            // 計算總距離
+            if (prevLatLng) {
+                var distance = prevLatLng.distanceTo(userLatLng) / 1000; // 轉換為公里
+                totalDistance += distance;
+            }
+            prevLatLng = userLatLng;
+
+            // 計算爬升
+            if (prevAltitude !== null && altitude !== null) {
+                var elevationChange = altitude - prevAltitude;
+                if (elevationChange > 0) {
+                    totalElevationGain += elevationChange;
                 }
-                prevLatLng = userLatLng;
+            }
+            prevAltitude = altitude;
 
-                // 計算爬升
-                if (prevAltitude !== null && altitude !== null) {
-                    var elevationChange = altitude - prevAltitude;
-                    if (elevationChange > 0) {
-                        totalElevationGain += elevationChange;
-                    }
-                }
-                prevAltitude = altitude;
+            // 更新 UI
+            updateUI();
 
-                // 更新 UI
-                updateUI();
+        }, function (error) {
+            console.error("導航失敗: ", error);
+        }, { enableHighAccuracy: true });
+    } else {
+        alert('您的裝置不支援導航功能');
+    }
+});
 
-            }, function (error) {
-                console.error("導航失敗: ", error);
-            }, { enableHighAccuracy: true });
-        } else {
-            alert('您的裝置不支援導航功能');
-        }
+// 顯示未匯入 GPX 的彈出視窗
+function showNoGPXModal() {
+    const modalHtml = `
+    <div class="modal" tabindex="-1" id="noGPXModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">錯誤</h5>
+                </div>
+                <div class="modal-body">
+                    <p>未匯入地圖，請先匯入 GPX 資料。</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="closeModal">確定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById("closeModal").addEventListener("click", function () {
+        document.getElementById("noGPXModal").remove();  // 關閉並移除彈出視窗
     });
+    new bootstrap.Modal(document.getElementById("noGPXModal")).show();
+}
+
 
     // 計算使用者距離路徑最近的點
     function getNearestPointOnRoute(userLatLng, pathCoordinates) {

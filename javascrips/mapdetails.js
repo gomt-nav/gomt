@@ -29,17 +29,26 @@ document.addEventListener("DOMContentLoaded", function () {
                     document.getElementById("elevationGain").textContent = route.elevationGain;
                     document.getElementById("elevationLoss").textContent = route.elevationLoss;
 
-                    const gpxLayer = new L.GPX(route.gpx, { async: true }).addTo(map);
+                    // 禁用開始與結束標記圖示
+                    const gpxLayer = new L.GPX(route.gpx, {
+                        async: true,
+                        marker_options: {
+                            startIconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png', // 不顯示開始位置的圖示
+                            endIconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',   // 不顯示結束位置的圖示
+                            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'     // 不顯示影子
+                        }
+                    }).addTo(map);
+
                     gpxLayer.on('loaded', function (e) {
                         map.fitBounds(e.target.getBounds());
                     });
 
-                    // 將 GPX 加載到地圖的邏輯
+                    // 新增「加載到地圖」按鈕的功能
                     document.getElementById("loadToMap").addEventListener("click", function () {
-                        // 將 GPX 資料保存到 localStorage
-                        localStorage.setItem('gpxData', route.gpx);
-                        // 重定向至 map.html
-                        window.location.href = 'map.html';
+                        // 將 GPX 資料存入 localStorage
+                        localStorage.setItem("selectedGPX", route.gpx);
+                        // 跳轉到 map.html
+                        window.location.href = "map.html";
                     });
                 } else {
                     console.error("未找到對應的資料");
