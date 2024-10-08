@@ -4,7 +4,7 @@ body {
 }
 
 .container {
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
     padding: 20px;
     background-color: #fff;
@@ -17,5 +17,5 @@ h2 {
 }
 
 button {
-    margin-top: 10px;
+    margin-top: 20px;
 }

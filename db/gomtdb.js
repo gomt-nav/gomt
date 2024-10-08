@@ -38,6 +38,8 @@ function openDatabase() {
         if (!db.objectStoreNames.contains('users')) {
             let usersStore = db.createObjectStore('users', { keyPath: 'userId' });
             usersStore.createIndex('username', 'username', { unique: false });
+            usersStore.createIndex('mail', 'mail', { unique: false });
+            usersStore.createIndex('password', 'password', { unique: false });
             usersStore.createIndex('loginDate', 'loginDate', { unique: false });
         }
     };

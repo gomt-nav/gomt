@@ -5,39 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>註冊頁面</title>
     <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="./css/register.css">
+    <script src="./db/gomtDB.js"></script>
+    <script type="module" src="./javascrips/register.js"></script>
+    <script type="module" src="./db/firebase-config.js"></script>
+    <script type="module" src="./db/firebase-sync.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h2>註冊新帳戶</h2>
-        <form action="/submit_registration" method="POST">
+    <div class="container mt-5">
+        <h2 class="text-center">註冊新帳戶</h2>
+        <form action="/submit_registration" method="POST" class="mt-4">
             <div class="form-group">
                 <label for="name">姓名：</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" class="form-control" id="name" name="name" required>
             </div>
             <div class="form-group">
                 <label for="email">電子郵件：</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" class="form-control" id="email" name="email" required>
             </div>
             <div class="form-group">
                 <label for="password">密碼：</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <button type="submit">註冊</button>
+            <button type="submit" class="btn btn-success btn-block">註冊</button>
         </form>
-        <!-- Google 登入按鈕 -->
-        <div class="google-login">
-            <button onclick="handleGoogleLogin()">使用 Google 註冊</button>
+        <div class="google-login text-center mt-3">
+            <button class="btn btn-danger" onclick="handleGoogleLogin()">使用 Google 註冊</button>
         </div>
     </div>
 
-    <!-- Google 登入處理的假象腳本 -->
     <script>
         function handleGoogleLogin() {
             console.log('Google 登入被點擊');
-            // 在此處添加真實的 Google 登入邏輯或重定向
         }
     </script>
-    <script src="./javascrips/sw-register.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
