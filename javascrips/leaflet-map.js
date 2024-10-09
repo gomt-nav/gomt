@@ -212,94 +212,165 @@ function showNoGPXModal() {
     }
 
     // 開始/停止記錄
-    var isRecording = false;
-    var recordButton = document.getElementById("recordButton");
+var isRecording = false;
+var recordButton = document.getElementById("recordButton");
 
-    recordButton.addEventListener("click", function () {
-        if (!isRecording) {
-            isRecording = true;
-            recordButton.innerText = "停止記錄";
-            startTime = new Date(); // 記錄開始時間
+recordButton.addEventListener("click", function () {
+    checkLoginStatusAndStartRecording(); // 檢查登入狀態並決定是否開始記錄
+});
 
-            // 開始記錄過程
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(function (position) {
-                    var lat = position.coords.latitude;
-                    var lon = position.coords.longitude;
-                    var altitude = position.coords.altitude;
+// 檢查登入狀態並開始記錄
+function checkLoginStatusAndStartRecording() {
+    const dbRequest = indexedDB.open('gomtDB', 2);
 
-                    // 更新地圖上的位置
-                    marker.setLatLng([lat, lon]);
-                    map.setView([lat, lon], map.getZoom());
+    dbRequest.onsuccess = function(event) {
+        const db = event.target.result;
+        const transaction = db.transaction(["users"], "readonly");
+        const store = transaction.objectStore("users");
+        const getUserRequest = store.get('currentUser');
 
-                    // 將位置加入路徑
-                    pathCoordinates.push([lat, lon]);
-                    polyline.setLatLngs(pathCoordinates);
+        getUserRequest.onsuccess = function(event) {
+            const user = event.target.result;
 
-                    // 計算總距離
-                    if (prevLatLng) {
-                        var distance = prevLatLng.distanceTo(L.latLng(lat, lon)) / 1000; // 轉換為公里
-                        totalDistance += distance;
-                    }
-                    prevLatLng = L.latLng(lat, lon);
-
-                    // 計算爬升
-                    if (prevAltitude !== null && altitude !== null) {
-                        var elevationChange = altitude - prevAltitude;
-                        if (elevationChange > 0) {
-                            totalElevationGain += elevationChange;
-                        }
-                    }
-                    prevAltitude = altitude;
-
-                    // 更新 UI
-                    updateUI();
-
-                }, function (error) {
-                    console.error("定位失敗: ", error);
-                }, { enableHighAccuracy: true });
+            if (user) {
+                // 使用者已登入，開始記錄
+                handleRecording();
+            } else {
+                // 未登入，顯示提示
+                showLoginPrompt();
             }
-        } else {
-            // 停止記錄並保存路徑
-            isRecording = false;
-            recordButton.innerText = "開始記錄";
-            openSaveWindow();
-        }
-    });
+        };
 
-    // 彈出儲存視窗
-    function openSaveWindow() {
-        const saveWindowHtml = `
-        <div class="modal" tabindex="-1" id="saveModal">
+        getUserRequest.onerror = function() {
+            console.error("無法檢查登入狀態");
+        };
+    };
+
+    dbRequest.onerror = function(event) {
+        console.error("無法加載用戶資料: ", event.target.errorCode);
+    };
+}
+
+// 顯示未登入提示視窗
+function showLoginPrompt() {
+    const loginPromptHtml = `
+        <div class="modal" tabindex="-1" id="loginPromptModal">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">建立路線檔</h5>
+                        <h5 class="modal-title">請先登入</h5>
                     </div>
                     <div class="modal-body">
-                        <label for="routeName">輸入檔名:</label>
-                        <input type="text" id="routeName" class="form-control" placeholder="輸入檔名" />
-                        <label for="routeCity">選擇城市:</label>
-                        <select id="routeCity" class="form-select">
-                            <option value="台北">台北</option>
-                            <option value="高雄">高雄</option>
-                        </select>
+                        <p>您需要先登入帳號才能開始記錄路線。</p>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" id="saveRoute">儲存</button>
-                        <button class="btn btn-secondary" id="cancelRoute">取消</button>
+                        <button class="btn btn-primary" id="loginButton">前往登入</button>
+                        <button class="btn btn-secondary" id="closePromptButton">關閉</button>
                     </div>
                 </div>
             </div>
         </div>
     `;
-        document.body.insertAdjacentHTML('beforeend', saveWindowHtml);
-        document.getElementById("saveRoute").addEventListener("click", saveRouteToGpx);
-        document.getElementById("cancelRoute").addEventListener("click", function () {
-            document.getElementById("saveModal").remove();
-        });
-        new bootstrap.Modal(document.getElementById("saveModal")).show();
+    document.body.insertAdjacentHTML('beforeend', loginPromptHtml);
+
+    document.getElementById("loginButton").addEventListener("click", function () {
+        window.location.href = "login.html"; // 前往登入頁面
+    });
+
+    document.getElementById("closePromptButton").addEventListener("click", function () {
+        document.getElementById("loginPromptModal").remove();
+    });
+
+    new bootstrap.Modal(document.getElementById("loginPromptModal")).show();
+}
+
+// 處理記錄路徑的邏輯
+function handleRecording() {
+    if (!isRecording) {
+        isRecording = true;
+        recordButton.innerText = "停止記錄";
+        startTime = new Date(); // 記錄開始時間
+
+        // 開始記錄過程
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(function (position) {
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
+                var altitude = position.coords.altitude;
+
+                // 更新地圖上的位置
+                marker.setLatLng([lat, lon]);
+                map.setView([lat, lon], map.getZoom());
+
+                // 將位置加入路徑
+                pathCoordinates.push([lat, lon]);
+                polyline.setLatLngs(pathCoordinates);
+
+                // 計算總距離
+                if (prevLatLng) {
+                    var distance = prevLatLng.distanceTo(L.latLng(lat, lon)) / 1000; // 轉換為公里
+                    totalDistance += distance;
+                }
+                prevLatLng = L.latLng(lat, lon);
+
+                // 計算爬升
+                if (prevAltitude !== null && altitude !== null) {
+                    var elevationChange = altitude - prevAltitude;
+                    if (elevationChange > 0) {
+                        totalElevationGain += elevationChange;
+                    }
+                }
+                prevAltitude = altitude;
+
+                // 更新 UI
+                updateUI();
+
+            }, function (error) {
+                console.error("定位失敗: ", error);
+            }, { enableHighAccuracy: true });
+        }
+    } else {
+        // 停止記錄並保存路徑
+        isRecording = false;
+        recordButton.innerText = "開始記錄";
+        openSaveWindow();
     }
+}
+
+// 彈出儲存視窗 (保持原樣)
+function openSaveWindow() {
+    const saveWindowHtml = `
+    <div class="modal" tabindex="-1" id="saveModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">建立路線檔</h5>
+                </div>
+                <div class="modal-body">
+                    <label for="routeName">輸入檔名:</label>
+                    <input type="text" id="routeName" class="form-control" placeholder="輸入檔名" />
+                    <label for="routeCity">選擇城市:</label>
+                    <select id="routeCity" class="form-select">
+                        <option value="台北">台北</option>
+                        <option value="高雄">高雄</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="saveRoute">儲存</button>
+                    <button class="btn btn-secondary" id="cancelRoute">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', saveWindowHtml);
+    document.getElementById("saveRoute").addEventListener("click", saveRouteToGpx);
+    document.getElementById("cancelRoute").addEventListener("click", function () {
+        document.getElementById("saveModal").remove();
+    });
+    new bootstrap.Modal(document.getElementById("saveModal")).show();
+}
+
 
     // 將路徑存為 GPX 並儲存到 IndexedDB
     function saveRouteToGpx() {

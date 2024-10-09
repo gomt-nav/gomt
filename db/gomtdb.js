@@ -42,6 +42,12 @@ function openDatabase() {
             usersStore.createIndex('password', 'password', { unique: false });
             usersStore.createIndex('loginDate', 'loginDate', { unique: false });
         }
+
+        // 建立 sessions 資料表，用來儲存當前登入的使用者
+        if (!db.objectStoreNames.contains('sessions')) {
+            let sessionsStore = db.createObjectStore('sessions', { keyPath: 'sessionId', autoIncrement: true });
+            sessionsStore.createIndex('currentUser', 'currentUser', { unique: false });
+        }
     };
 
     request.onsuccess = function (event) {

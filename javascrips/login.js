@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const transaction = db.transaction(["users"], "readonly");
             const store = transaction.objectStore("users");
 
-            // 檢查是否有符合 username 或 email 的資料
             let matchFound = false;
 
             // 使用游標查找符合 username 或 email 的資料
@@ -30,15 +29,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     // 比對 username 或 email 且密碼正確
                     if ((userData.username === usernameOrEmail || userData.email === usernameOrEmail) && userData.password === password) {
                         matchFound = true;
-                        // 使用者登入成功，儲存登入狀態並跳轉至個人資料頁面
-                        localStorage.setItem("loggedInUser", JSON.stringify(userData)); // 保存登入的使用者資料到 localStorage
-                        window.location.href = "profile.html"; // 跳轉到個人資料頁面
+
+                        // 使用者登入成功，儲存登入狀態到 IndexedDB 的 sessions
+                        saveSession(userData);
+
+                        // 跳轉到個人資料頁面
+                        window.location.href = "profile.html";
                     } else {
-                        // 如果未找到，繼續查找下一個游標
-                        cursor.continue();
+                        cursor.continue(); // 繼續查找下一個游標
                     }
                 } else {
-                    // 游標結束，未找到匹配資料
                     if (!matchFound) {
                         alert("帳號或密碼錯誤，請重新嘗試！");
                     }
@@ -56,4 +56,37 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("資料庫無法開啟，請稍後再試！");
         };
     });
+
+    // 儲存當前使用者登入狀態到 sessions
+    function saveSession(userData) {
+        const dbRequest = indexedDB.open('gomtDB', 2);
+
+        dbRequest.onsuccess = function (event) {
+            const db = event.target.result;
+            const transaction = db.transaction(["sessions"], "readwrite");
+            const sessionStore = transaction.objectStore("sessions");
+
+            const sessionData = {
+                sessionId: "currentUser", // 固定使用 currentUser 來表示當前登入的用戶
+                userId: userData.userId,  // 儲存用戶的 userId
+                username: userData.username, // 使用者名稱
+                email: userData.email, // 使用者的電子郵件
+                loginDate: new Date().toISOString() // 登入時間
+            };
+
+            const request = sessionStore.put(sessionData);
+
+            request.onsuccess = function () {
+                console.log("登入狀態已儲存到 sessions");
+            };
+
+            request.onerror = function (event) {
+                console.error("儲存登入狀態失敗: ", event.target.error);
+            };
+        };
+
+        dbRequest.onerror = function (event) {
+            console.error("無法打開資料庫: ", event.target.errorCode);
+        };
+    }
 });
