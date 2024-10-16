@@ -1,3 +1,4 @@
+//routeif.js
 document.addEventListener("DOMContentLoaded", function () {
     // 綁定各個按鈕的 DOM 元素
     const logoutButton = document.getElementById("logoutButton");
