@@ -1,0 +1,2 @@
+2024-10-17 11:53:03,822 - ERROR - Failed to retrieve data from ['https://www.hiking.biji.co/', 'https://hikingbook.net/', 'https://www.backpackers.com.tw/forum/forumdisplay.php?f=31', 'https://www.100mountain.com/', 'https://taiwanhiking.com/']: No connection adapters were found for "['https://www.hiking.biji.co/', 'https://hikingbook.net/', 'https://www.backpackers.com.tw/forum/forumdisplay.php?f=31', 'https://www.100mountain.com/', 'https://taiwanhiking.com/']"
+2024-10-17 11:53:03,823 - WARNING - No .gpx files to download.
