@@ -1,7 +1,8 @@
 import { getGPXDataFromIndexedDB } from '../db/indexeddb-helper.js';
 import { checkLoginStatus } from './loginValidator.js';
 
-let currentPosition = null; // 全局變數，存儲使用者的當前位置
+// 將 currentPosition 變數導出，以便其他模組引用
+export let currentPosition = null; // 全局變數，存儲使用者的當前位置
 
 document.addEventListener("DOMContentLoaded", function () {
     // 初始化 Leaflet 地圖
@@ -36,11 +37,19 @@ document.addEventListener("DOMContentLoaded", function () {
     // 更新時間、距離、高度的 UI
     function updateUI() {
         const currentTime = new Date();
-        const elapsedTime = Math.floor((currentTime - startTime) / 1000); // 秒數
-        const hours = Math.floor(elapsedTime / 3600);
-        const minutes = Math.floor((elapsedTime % 3600) / 60);
-        const seconds = elapsedTime % 60;
-        document.getElementById("time").innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // 確保 startTime 已初始化
+        if (startTime) {
+            const elapsedTime = Math.floor((currentTime - startTime) / 1000); // 計算秒數
+            const hours = Math.floor(elapsedTime / 3600);
+            const minutes = Math.floor((elapsedTime % 3600) / 60);
+            const seconds = elapsedTime % 60;
+            document.getElementById("time").innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            // 如果 startTime 未初始化，顯示初始時間
+            document.getElementById("time").innerText = "00:00:00";
+        }
+
         document.getElementById("distance").innerText = totalDistance.toFixed(2) + " KM";
         document.getElementById("elevation").innerText = totalElevationGain.toFixed(2) + " M";
     }
@@ -112,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var altitude = position.coords.altitude;
                 var userLatLng = L.latLng(lat, lon);
 
-                // 更新全局位置變數
+                // 更新全局位置變數，讓其他模組可以使用
                 currentPosition = {
                     latitude: lat,
                     longitude: lon,
@@ -241,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!isRecording) {
             isRecording = true;
             recordButton.innerText = "停止記錄";
-            startTime = new Date();
+            startTime = new Date(); // 在這裡初始化開始時間
 
             // 開始記錄過程
             if (navigator.geolocation) {
@@ -283,8 +292,129 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // 儲存路徑的邏輯保持不變
+
+
+    // 彈出儲存視窗 
     function openSaveWindow() {
-        // 儲存窗口邏輯
+        const saveWindowHtml = `
+    <div class="modal" tabindex="-1" id="saveModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">建立路線檔</h5>
+                </div>
+                <div class="modal-body">
+                    <label for="routeName">輸入檔名:</label>
+                    <input type="text" id="routeName" class="form-control" placeholder="輸入檔名" />
+                    <label for="routeCity">選擇城市:</label>
+                    <select id="routeCity" class="form-select">
+                        <option value="臺北市">臺北市</option>
+<option value="新北市">新北市</option>
+<option value="桃園市">桃園市</option>
+<option value="臺中市">臺中市</option>
+<option value="臺南市">臺南市</option>
+<option value="高雄市">高雄市</option>
+<option value="基隆市">基隆市</option>
+<option value="新竹市">新竹市</option>
+<option value="嘉義市">嘉義市</option>
+<option value="新竹縣">新竹縣</option>
+<option value="苗栗縣">苗栗縣</option>
+<option value="彰化縣">彰化縣</option>
+<option value="南投縣">南投縣</option>
+<option value="雲林縣">雲林縣</option>
+<option value="嘉義縣">嘉義縣</option>
+<option value="屏東縣">屏東縣</option>
+<option value="宜蘭縣">宜蘭縣</option>
+<option value="花蓮縣">花蓮縣</option>
+<option value="臺東縣">臺東縣</option>
+<option value="澎湖縣">澎湖縣</option>
+<option value="金門縣">金門縣</option>
+<option value="連江縣">連江縣</option>
+
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="saveRoute">儲存</button>
+                    <button class="btn btn-secondary" id="cancelRoute">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+        document.body.insertAdjacentHTML('beforeend', saveWindowHtml);
+        document.getElementById("saveRoute").addEventListener("click", saveRouteToGpx);
+        document.getElementById("cancelRoute").addEventListener("click", function () {
+            document.getElementById("saveModal").remove();
+        });
+        new bootstrap.Modal(document.getElementById("saveModal")).show();
+    }
+
+
+    // 將路徑存為 GPX 並儲存到 IndexedDB
+    function saveRouteToGpx() {
+        const routeName = document.getElementById("routeName").value;
+        const routeCity = document.getElementById("routeCity").value;
+
+        // 獲取預估時間、距離、海拔高度等數據
+        const duration = document.getElementById("time").innerText;
+        const distance = document.getElementById("distance").innerText;
+        const elevationGain = document.getElementById("elevation").innerText;
+
+        // 檢查必填欄位是否都有值
+        if (!routeName || !routeCity) {
+            alert("請輸入路線名稱並選擇城市！");
+            return;
+        }
+
+        // 將路徑數據轉為 GPX 格式
+        let gpxData = `<?xml version="1.0" encoding="UTF-8"?>
+        <gpx version="1.1" creator="GoMT" xmlns="http://www.topografix.com/GPX/1/1">
+            <trk><name>${routeName}</name><trkseg>`;
+        pathCoordinates.forEach(coord => {
+            gpxData += `<trkpt lat="${coord[0]}" lon="${coord[1]}"></trkpt>`;
+        });
+        gpxData += `</trkseg></trk></gpx>`;
+
+        // 打開 IndexedDB
+        var dbRequest = indexedDB.open('gomtDB', 2);
+
+        dbRequest.onsuccess = function (event) {
+            var db = event.target.result;
+            var transaction = db.transaction(["routeRecords"], "readwrite");
+            var store = transaction.objectStore("routeRecords");
+
+            // 準備要插入的數據
+            var data = {
+                routeName: routeName,
+                date: new Date().toISOString(),
+                duration: duration,
+                distance: distance,
+                elevationGain: elevationGain,
+                // elevationLoss: elevationLoss,
+                mtPlace: routeCity,
+                gpx: gpxData
+            };
+
+            // 確保資料有正確的數據
+            if (data.routeName && data.date && data.gpx) {
+                store.add(data).onsuccess = function () {
+                    alert("路線已成功儲存！");
+                    location.reload();  // 儲存後刷新頁面
+                };
+
+                store.onerror = function (event) {
+                    console.error("新增資料時發生錯誤: ", event.target.error);
+                };
+            } else {
+                console.error("資料缺少必要欄位，無法儲存。");
+            }
+        };
+
+        dbRequest.onerror = function (event) {
+            console.error("無法開啟資料庫: ", event.target.errorCode);
+        };
+
+        // 移除彈窗
+        document.getElementById("saveModal").remove();
     }
 });
