@@ -4,7 +4,7 @@ import { checkLoginStatus } from './loginValidator.js';
 
 // 開啟 IndexedDB 資料庫
 const DB_NAME = 'gomtDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 let db;
 
 document.addEventListener("DOMContentLoaded", function () {

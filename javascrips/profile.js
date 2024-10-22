@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 從 IndexedDB 取得登入的使用者資料
     function loadUserProfile() {
-        const dbRequest = indexedDB.open('gomtDB', 2);
+        const dbRequest = indexedDB.open('gomtDB', 3);
 
         dbRequest.onsuccess = function (event) {
             const db = event.target.result;
@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
         logoutButton.addEventListener("click", function () {
             console.log("登出按鈕被點擊");
             // 清除用戶的本地身份驗證狀態
-            const dbRequest = indexedDB.open('gomtDB', 2);
+            const dbRequest = indexedDB.open('gomtDB', 3);
             dbRequest.onsuccess = function (event) {
                 const db = event.target.result;
                 const transaction = db.transaction(["sessions"], "readwrite");

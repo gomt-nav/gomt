@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 從 IndexedDB 讀取並顯示 GPX 路線資料
     function loadGPXFromIndexedDB(routeId) {
-        const dbRequest = indexedDB.open('gomtDB', 2);
+        const dbRequest = indexedDB.open('gomtDB', 3);
 
         dbRequest.onsuccess = function (event) {
             var db = event.target.result;
@@ -376,7 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
         gpxData += `</trkseg></trk></gpx>`;
 
         // 打開 IndexedDB
-        var dbRequest = indexedDB.open('gomtDB', 2);
+        var dbRequest = indexedDB.open('gomtDB', 3);
 
         dbRequest.onsuccess = function (event) {
             var db = event.target.result;

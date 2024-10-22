@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadRouteDetailsFromIndexedDB(routeId) {
-        const dbRequest = indexedDB.open('gomtDB', 2);
+        const dbRequest = indexedDB.open('gomtDB', 3);
 
         dbRequest.onsuccess = function (event) {
             const db = event.target.result;

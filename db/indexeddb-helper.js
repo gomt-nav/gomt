@@ -1,6 +1,6 @@
 export function getGPXDataFromIndexedDB(routeId) {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('gomtDB', 1);
+        const request = indexedDB.open('gomtDB', 3);
 
         request.onsuccess = function (event) {
             const db = event.target.result;
