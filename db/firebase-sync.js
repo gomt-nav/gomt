@@ -1,18 +1,18 @@
-import { getFirestore, collection, addDoc, deleteDoc, doc, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-import { firestoreDB } from './firebase-config.js';
+//firebase-sync.js
+import { getFirestore, collection, addDoc, deleteDoc, doc, getDocs, persistentLocalCache } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { app, firestoreDB } from './firebase-config.js';  // 匯入 Firebase App 和 Firestore
 
-// 啟用 Firebase Firestore 離線持久化
-enableIndexedDbPersistence(firestoreDB)
-    .catch((err) => {
-        if (err.code == 'failed-precondition') {
-            console.error("無法啟用持久化：多個分頁開啟。");
-        } else if (err.code == 'unimplemented') {
-            console.error("目前的瀏覽器不支援持久化。");
-        }
-    });
+// 使用已經初始化的 Firestore
+const firestore = getFirestore(app); // 使用 getFirestore 獲取已初始化的 Firestore
 
 // 同步會員和路線資料到 Firebase
 async function syncIndexedDBToFirebase() {
+    // 檢查網絡狀態
+    if (!navigator.onLine) {
+        console.log('離線狀態，等待重新上線後進行同步');
+        return;
+    }
+
     const dbRequest = indexedDB.open('gomtDB', 8);
 
     dbRequest.onupgradeneeded = function (event) {
@@ -30,16 +30,13 @@ async function syncIndexedDBToFirebase() {
     dbRequest.onsuccess = function (event) {
         const db = event.target.result;
 
-        // 確認 ObjectStore 是否存在
         if (!db.objectStoreNames.contains('routeRecords') || !db.objectStoreNames.contains('users')) {
             console.error("routeRecords 或 users object store 不存在。");
             return;
         }
 
-        // 同步 routeRecords
+        // 同步資料
         syncRoutes(db);
-
-        // 同步 users
         syncUsers(db);
     };
 
@@ -48,7 +45,7 @@ async function syncIndexedDBToFirebase() {
     };
 }
 
-// 同步路線資料
+// 同步路線資料的函式
 async function syncRoutes(db) {
     const transaction = db.transaction(['routeRecords'], 'readonly');
     const store = transaction.objectStore('routeRecords');
@@ -61,7 +58,6 @@ async function syncRoutes(db) {
             const firebaseRecordsSnapshot = await getDocs(collection(firestoreDB, 'routes'));
             const firebaseRecords = firebaseRecordsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
-            // 刪除多餘資料
             for (let firebaseRecord of firebaseRecords) {
                 if (!indexedDbRecords.some(record => record.recordId === firebaseRecord.recordId)) {
                     await deleteDoc(doc(firestoreDB, 'routes', firebaseRecord.id));
@@ -69,7 +65,6 @@ async function syncRoutes(db) {
                 }
             }
 
-            // 添加缺失資料
             for (let indexedDbRecord of indexedDbRecords) {
                 const existsInFirebase = firebaseRecords.some(record => record.recordId === indexedDbRecord.recordId);
                 if (!existsInFirebase) {
@@ -88,7 +83,7 @@ async function syncRoutes(db) {
     };
 }
 
-// 同步會員資料
+// 同步會員資料的函式
 async function syncUsers(db) {
     const transaction = db.transaction(['users'], 'readonly');
     const store = transaction.objectStore('users');
@@ -101,7 +96,6 @@ async function syncUsers(db) {
             const firebaseUsersSnapshot = await getDocs(collection(firestoreDB, 'users'));
             const firebaseUsers = firebaseUsersSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
-            // 刪除多餘資料
             for (let firebaseUser of firebaseUsers) {
                 if (!indexedDbUsers.some(user => user.userId === firebaseUser.userId)) {
                     await deleteDoc(doc(firestoreDB, 'users', firebaseUser.id));
@@ -109,7 +103,6 @@ async function syncUsers(db) {
                 }
             }
 
-            // 添加缺失資料
             for (let indexedDbUser of indexedDbUsers) {
                 const existsInFirebase = firebaseUsers.some(user => user.userId === indexedDbUser.userId);
                 if (!existsInFirebase) {
@@ -128,8 +121,10 @@ async function syncUsers(db) {
     };
 }
 
-// 監聽網路狀態變更事件
+// 在網路變回在線時進行同步
 window.addEventListener('online', syncIndexedDBToFirebase);
 
-// 初次同步資料
+// 立即同步資料（頁面加載或有變更時）
 syncIndexedDBToFirebase();
+
+export { syncIndexedDBToFirebase };

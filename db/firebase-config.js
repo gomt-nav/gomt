@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js";
 // 引入 Firestore 庫
-import { getFirestore, collection, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -25,5 +25,5 @@ console.log("Firebase Analytics 已成功初始化");
 const firestoreDB = getFirestore(app);
 console.log("Firestore 已成功初始化", firestoreDB);
 
-export { firestoreDB }; 
-console.log("firestoreDB 已導出", firestoreDB);
+// 匯出 Firebase App 和 Firestore
+export { app, firestoreDB }; 
