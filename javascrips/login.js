@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("輸入的密碼:", password); // 調試輸出
 
         // 打開 IndexedDB
-        const dbRequest = indexedDB.open("gomtDB", 2);
+        const dbRequest = indexedDB.open("gomtDB", 8);
 
         dbRequest.onsuccess = function (event) {
             const db = event.target.result;
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 儲存當前使用者登入狀態到 sessions
     function saveSession(userData) {
         
-        const dbRequest = indexedDB.open('gomtDB', 2);
+        const dbRequest = indexedDB.open('gomtDB', 8);
 
         dbRequest.onsuccess = function (event) {
             const db = event.target.result;

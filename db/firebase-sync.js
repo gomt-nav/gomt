@@ -13,7 +13,7 @@ enableIndexedDbPersistence(firestoreDB)
 
 // 同步會員和路線資料到 Firebase
 async function syncIndexedDBToFirebase() {
-    const dbRequest = indexedDB.open('gomtDB', 2);
+    const dbRequest = indexedDB.open('gomtDB', 8);
 
     dbRequest.onupgradeneeded = function (event) {
         const db = event.target.result;

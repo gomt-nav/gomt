@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const nameInput = document.getElementById("name");
 
     function loadCurrentUser() {
-        const dbRequest = indexedDB.open("gomtDB", 2);
+        const dbRequest = indexedDB.open("gomtDB", 8);
         dbRequest.onsuccess = function (event) {
             const db = event.target.result;
             const transaction = db.transaction(["users", "sessions"], "readonly");
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const dbRequest = indexedDB.open("gomtDB", 2);
+        const dbRequest = indexedDB.open("gomtDB", 8);
         dbRequest.onsuccess = function (event) {
             const db = event.target.result;
             const transaction = db.transaction(["users", "sessions"], "readwrite");

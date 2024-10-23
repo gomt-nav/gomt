@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         // 開啟 IndexedDB 資料庫
-        const dbRequest = indexedDB.open('gomtDB', 2);
+        const dbRequest = indexedDB.open('gomtDB', 8);
 
         dbRequest.onupgradeneeded = function (event) {
             const db = event.target.result;

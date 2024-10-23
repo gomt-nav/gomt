@@ -1,7 +1,7 @@
 export function checkLoginStatus(callback) {
    
     console.log("checkLoginStatus已導出");
-    const dbRequest = indexedDB.open('gomtDB', 2);
+    const dbRequest = indexedDB.open('gomtDB', 8);
 
     dbRequest.onsuccess = function (event) {
         console.log("成功打開 IndexedDB 資料庫");

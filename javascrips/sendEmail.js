@@ -1,7 +1,13 @@
+// 確保 EmailJS SDK 已初始化
+(function(){
+    emailjs.init("B6zFwgyu5FF07aHMS"); //userID
+    console.log('emailjs初始化成功')
+})();
+
 /**
  * 發送電子郵件
  * @param {string} toEmail - 收件人的電子郵件地址
- * @param {string} fromEmail - 寄件人的電子郵件地址 (如果適用)
+ * @param {string} fromEmail - 寄件人的電子郵件地址
  * @param {string} subject - 郵件主題
  * @param {string} message - 郵件內容
  */
@@ -11,31 +17,20 @@ function sendEmail(toEmail, fromEmail = "", subject = "郵件主題", message = 
     console.log(`主題: ${subject}`);
     console.log(`內容: ${message}`);
 
-    // 假設這裡使用郵件 API 進行實際發送
-    // 例如，透過郵件 API 來發送郵件
-    // fetch('https://api.your-email-service.com/send', {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({
-    //         to: toEmail,
-    //         from: fromEmail,
-    //         subject: subject,
-    //         text: message
-    //     }),
-    // }).then(response => {
-    //     if (response.ok) {
-    //         alert("郵件發送成功！");
-    //     } else {
-    //         alert("郵件發送失敗，請稍後再試！");
-    //     }
-    // }).catch(error => {
-    //     console.error("發生錯誤: ", error);
-    // });
-
-    // 模擬成功發送訊息
-    alert(`郵件已成功發送至 ${toEmail}！`);
+    // 使用 EmailJS 發送郵件
+    emailjs.send("service_9ww3q6s", "template_q44vklq", {
+        to_name: toEmail,            // 對應到模板中的 {{to_name}}
+        from_name: fromEmail,        // 對應到模板中的 {{from_name}}
+        message: message,            // 對應到模板中的 {{message}}
+        reply_to: fromEmail,         // 對應到模板中的 {{reply_to}}
+        subject: subject
+    }).then(function(response) {
+        console.log('郵件發送成功！', response.status, response.text);
+        alert(`郵件已成功發送至 ${toEmail}！`);
+    }, function(error) {
+        console.error('郵件發送失敗...', error);
+        alert('郵件發送失敗，請稍後再試！');
+    });
 }
 
 /**
@@ -48,5 +43,4 @@ function sendVerificationEmail(email, subject = "帳號驗證", message = "請�
     sendEmail(email, "", subject, message);
 }
 
-// 將此函數導出以便其他文件引入
 export { sendEmail, sendVerificationEmail };

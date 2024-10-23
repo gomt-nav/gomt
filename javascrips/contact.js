@@ -12,6 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 提示用戶感謝信息
         alert("感謝您的聯絡！\n我們會盡快回覆您。");
-        window.location.href = "profile.html"; // 返回個人資料頁面
+        // window.location.href = "profile.html"; // 返回個人資料頁面
     });
 });
