@@ -1,25 +1,42 @@
+import { openDatabase } from '../db/gomtdb.js';
+
+// 確保資料庫已初始化
+openDatabase().then(() => {
+    checkLoginStatus((isLoggedIn, user) => {
+        if (isLoggedIn) {
+            console.log("使用者已登入：", user);
+        } else {
+            console.log("未登入");
+        }
+    });
+}).catch((error) => {
+    console.error("資料庫初始化失敗", error);
+});
+
 export function checkLoginStatus(callback) {
    
     console.log("checkLoginStatus已導出");
     const dbRequest = indexedDB.open('gomtDB', 8);
 
     dbRequest.onsuccess = function (event) {
-        console.log("成功打開 IndexedDB 資料庫");
         const db = event.target.result;
+
+        if (!db.objectStoreNames.contains('sessions')) {
+            console.error("'sessions' 物件存儲不存在");
+            callback(false, null);
+            return;
+        }
+
         const transaction = db.transaction(["sessions"], "readonly");
         const store = transaction.objectStore("sessions");
-        
-        console.log("正在從 'sessions' 物件存儲空間中查找 'currentUser'...");
         const getUserRequest = store.get('currentUser');
 
         getUserRequest.onsuccess = function (event) {
             const user = event.target.result;
             if (user) {
-                console.log("找到已登入的使用者：", user);
-                callback(true, user);  // 用戶已登入
+                callback(true, user);
             } else {
-                console.log("未找到登入的使用者");
-                callback(false, null);  // 用戶未登入
+                callback(false, null);
             }
         };
 
